@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cycle Challenge</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #e6f3ff;
+            color: #333;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 90%;
+            margin-top: 20px;
+        }
+        .game-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+        .game-button:hover {
+            background-color: #45a049;
+        }
+        #cycleImage {
+            width: 80px;
+            margin: 10px;
+        }
+        #paddleImage {
+            width: 80px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        #introText {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #666;
+        }
+        #olympicRecord {
+            font-size: 16px;
+            font-style: italic;
+            color: #444;
+            margin-bottom: 15px;
+        }
+        #timer, #distance {
+            font-size: 28px;
+            color: #2196F3;
+            margin: 15px 0;
+        }
+        #stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+        h1 {
+            color: #2196F3;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        #videoContainer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        #challengeVideo {
+            max-width: 90%;
+            max-height: 90%;
+        }
+        footer {
+            font-size: 14px;
+            color: #777;
+            margin-bottom: 10px;
+        }
+        @media (max-width: 600px) {
+            #cycleImage,
+            #paddleImage {
+                width: 60px;
+            }
+            .game-button {
+                font-size: 14px;
+                padding: 8px 16px;
+            }
+            #timer, #distance {
+                font-size: 22px;
+            }
+        }
+        #paddleInstruction {
+            font-size: 16px;
+            color: #444;
+            margin-top: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div>
+            <img id="cycleImage" src="assets/download.jpg" alt="Cycle">
+        </div>
+        <h1>Cycle Challenge</h1>
+        <p id="introText">
+            Click on the paddle only to pedal! <br>
+            How far can you go in 30 seconds?
+        </p>
+        <p id="olympicRecord">🏅 Olympic Record: 150 clicks in 30 seconds! Can you beat it?</p>
+        <button id="startButton" class="game-button">Start Cycling Challenge</button>
+        <p id="timer"></p>
+        <p id="distance">0 km</p>
+        <div id="stats" style="display: none;">
+            <div>
+                <div id="speedStat">0 km/h</div>
+                <div class="stat-label">Average Speed</div>
+            </div>
+            <div>
+                <div id="pedalStat">0</div>
+                <div class="stat-label">Pedal Clicks</div>
+            </div>
+        </div>
+        <div>
+            <img id="paddleImage" src="assets/download (1).jpg" alt="Paddle">
+            <!-- Instruction text added below the paddle image -->
+            <p id="paddleInstruction">Click on the paddle to pedal! Don't click anywhere else.</p>
+        </div>
+    </div>
+
+    <div id="videoContainer">
+        <video id="challengeVideo" controls>
+            <source src="assets/videoplayback.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <footer>by Prateek</footer>
+
+    <script>
+        let timerValue = 3;
+        let gameTime = 30;
+        let distance = 0;
+        let pedalClicks = 0;
+        let startTime;
+
+        const startButton = document.getElementById('startButton');
+        const timerElement = document.getElementById('timer');
+        const distanceElement = document.getElementById('distance');
+        const introText = document.getElementById('introText');
+        const statsDiv = document.getElementById('stats');
+        const speedStat = document.getElementById('speedStat');
+        const pedalStat = document.getElementById('pedalStat');
+        const paddleImage = document.getElementById('paddleImage');
+        const videoContainer = document.getElementById('videoContainer');
+        const challengeVideo = document.getElementById('challengeVideo');
+
+        startButton.addEventListener('click', () => {
+            if (confirm("For the best experience, use headphones. Are you ready to start?")) {
+                startButton.style.display = 'none';
+                introText.style.display = 'none';
+                document.getElementById('olympicRecord').style.display = 'none';
+                countdown();
+            }
+        });
+
+        function countdown() {
+            timerElement.textContent = timerValue;
+            if (timerValue > 0) {
+                setTimeout(() => {
+                    timerValue--;
+                    countdown();
+                }, 1000);
+            } else {
+                startChallenge();
+            }
+        }
+
+        function startChallenge() {
+            timerElement.textContent = gameTime;
+            statsDiv.style.display = 'flex';
+            startTime = Date.now();
+
+            paddleImage.addEventListener('click', pedalClick);
+
+            const timer = setInterval(() => {
+                if (gameTime > 0) {
+                    gameTime--;
+                    timerElement.textContent = gameTime;
+                    let elapsedSeconds = (Date.now() - startTime) / 1000;
+                    let averageSpeed = ((pedalClicks * 0.05) / elapsedSeconds * 3600).toFixed(1);
+                    speedStat.textContent = `${averageSpeed} km/h`;
+                } else {
+                    clearInterval(timer);
+                    endChallenge();
+                }
+            }, 1000);
+        }
+
+        function pedalClick() {
+            distance += 0.05;
+            pedalClicks++;
+            distanceElement.textContent = `${distance.toFixed(2)} km`;
+            pedalStat.textContent = pedalClicks;
+        }
+
+        function endChallenge() {
+            paddleImage.removeEventListener('click', pedalClick);
+            videoContainer.style.display = 'flex';
+            challengeVideo.play();
+            challengeVideo.addEventListener('ended', () => {
+                location.reload();
+            });
+        }
+    </script>
+</body>
+</html>
